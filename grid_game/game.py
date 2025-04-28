@@ -117,3 +117,8 @@ while state != goal_state and steps < 50:
 
 render(state)
 print(f"Ajan {steps} adımda hedefe ulaştı!")
+
+
+# Çapraz gidebilme özelliği
+
+# (3,3) noktasına bir adet ENGEL ekleyelim.
