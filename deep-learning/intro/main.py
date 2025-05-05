@@ -67,3 +67,5 @@ plt.imshow(x_test[index].reshape(28,28), cmap="gray")
 plt.title(f"Tahmin Edilen: {predicted_label} | Gerçek: {y_test[index]}")
 plt.axis('off')
 plt.show()
+
+model.save("my_model.h5") #.keras uzantısı da mümkün.
