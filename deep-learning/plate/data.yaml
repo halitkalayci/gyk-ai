@@ -1,0 +1,4 @@
+train: C:\Users\PC1\Desktop\Projects\Education\gyk-ai\deep-learning\plate\dataset\images
+val: C:\Users\PC1\Desktop\Projects\Education\gyk-ai\deep-learning\plate\dataset\images
+
+names: ["plaka"]
