@@ -1,5 +1,8 @@
-train: C:/Users/PC1/Desktop/Projects/Education/gyk-ai/deep-learning/plate/dataset/images
-val: C:/Users/PC1/Desktop/Projects/Education/gyk-ai/deep-learning/plate/dataset/images
+path: C:\Users\PC1\Desktop\Projects\Education\gyk-ai\deep-learning\plate\dataset
+train: images
+val: images
 
+
+nc: 1
 names:
   0: plaka
