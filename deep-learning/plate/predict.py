@@ -1,6 +1,13 @@
 from ultralytics import YOLO
 import cv2
 import matplotlib.pyplot as plt
+import pytesseract
+
+# opsiyonel bir satır.
+pytesseract.pytesseract.tesseract_cmd = r"C:\Program Files\Tesseract-OCR\tesseract.exe"
+
+# macos
+# /usr/local/bin/tesseract - /opt/homebrew/bin/tesseract
 
 # Modeli yükle
 model = YOLO("best.pt")
@@ -18,17 +25,26 @@ boxes = results[0].boxes # Tahminler listesi
 annot_img = img.copy()
 
 for box in boxes:
+    # Her tahminin x1,x2 y1,y2 alanları var
     x1, y1, x2, y2 = map(int, box.xyxy[0])
     conf = float(box.conf[0])
 
-    cv2.rectangle(annot_img, (x1,y1), (x2,y2), color=(0,255,0), thickness=2)
-    cv2.putText(annot_img, 
-                f"Guven Skoru: {conf}", (x1,y1 - 10), 
-                fontFace=cv2.FONT_HERSHEY_SCRIPT_SIMPLEX, 
-                fontScale=0.5,
-                color=(0,255,0), 
-                thickness=1)
 
-plt.figure(figsize=(10,7))
-plt.imshow(annot_img)
-plt.show()
+    cropped_plate = img[y1:y2, x1:x2]
+
+    #ocr ile resmi texte döndür.
+    # config="--psm 7" -> Tek satırlık bir okuma yapıyosun.
+    plate_text = pytesseract.image_to_string(cropped_plate, config="--psm 7")
+
+    print(plate_text)
+
+    plt.figure(figsize=(10,7))
+    plt.imshow(cropped_plate)
+    plt.show()
+    
+
+
+
+
+# OCR => Optical Character Recognition
+# 
