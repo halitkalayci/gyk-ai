@@ -12,7 +12,7 @@ pytesseract.pytesseract.tesseract_cmd = r"C:\Program Files\Tesseract-OCR\tessera
 # Modeli yükle
 model = YOLO("best.pt")
 
-img = cv2.imread("dataset/images/985.jpg")
+img = cv2.imread("dataset/images/758.jpg")
 # source => tahmin yapılacak kaynak (img yolu veya arrayi)
 # conf (confident) => güven skoru (0.5 %50'den düşük güven duyduğun tahminleri görmezden gel.)
 # verbose => Tahmin detaylarını konsola yazsın mı?
@@ -47,9 +47,11 @@ for box in boxes:
 
     #ocr ile resmi texte döndür.
     # config="--psm 7" -> Tek satırlık bir okuma yapıyosun.
-    plate_text = pytesseract.image_to_string(cropped_plate, config="--psm 7")
+    plate_text = pytesseract.image_to_string(cropped_plate)
 
     print(f"OCR:{plate_text}")
+
+    #Post-processing -> 34 JH 023] -> ] KALDIRMAK
 
     plt.figure(figsize=(10,7))
     plt.imshow(cropped_plate)
