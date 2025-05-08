@@ -12,7 +12,7 @@ pytesseract.pytesseract.tesseract_cmd = r"C:\Program Files\Tesseract-OCR\tessera
 # Modeli yükle
 model = YOLO("best.pt")
 
-img = cv2.imread("dataset/images/973.jpg")
+img = cv2.imread("dataset/images/985.jpg")
 # source => tahmin yapılacak kaynak (img yolu veya arrayi)
 # conf (confident) => güven skoru (0.5 %50'den düşük güven duyduğun tahminleri görmezden gel.)
 # verbose => Tahmin detaylarını konsola yazsın mı?
@@ -29,14 +29,27 @@ for box in boxes:
     x1, y1, x2, y2 = map(int, box.xyxy[0])
     conf = float(box.conf[0])
 
+    h, w, _ = img.shape
 
-    cropped_plate = img[y1:y2, x1:x2]
+    pad = 30 #her kenarı 10 piksel geniş keselim.
+
+    x1p = max(x1-pad, 0)
+    y1p = max(y1-pad, 0)
+    x2p = min(x2+pad, w)
+    y2p = min(y2+pad, h)
+
+    cropped_plate = img[y1p:y2p, x1p:x2p]
+
+    gray_plate = cv2.cvtColor(cropped_plate, cv2.COLOR_BGR2GRAY)
+
+    # Threshold uygula
+    _, threshold = cv2.threshold(gray_plate, 0, 255, cv2.THRESH_BINARY + cv2.THRESH_OTSU)
 
     #ocr ile resmi texte döndür.
     # config="--psm 7" -> Tek satırlık bir okuma yapıyosun.
     plate_text = pytesseract.image_to_string(cropped_plate, config="--psm 7")
 
-    print(plate_text)
+    print(f"OCR:{plate_text}")
 
     plt.figure(figsize=(10,7))
     plt.imshow(cropped_plate)
