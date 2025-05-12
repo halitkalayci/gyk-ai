@@ -3,6 +3,7 @@ from sklearn.preprocessing import LabelEncoder
 from sklearn.model_selection import train_test_split
 from tensorflow.keras.preprocessing.text import Tokenizer
 from tensorflow.keras.preprocessing.sequence import pad_sequences
+import tensorflow as tf
 
 #df = pd.read_csv("spam.csv", encoding_errors='ignore')
 df = pd.read_csv("spam.csv", encoding='latin1')
@@ -26,14 +27,34 @@ tokenizer.fit_on_texts(X_train) # sözlüğü oluşturma.
 X_train_seq = tokenizer.texts_to_sequences(X_train)
 X_test_seq  = tokenizer.texts_to_sequences(X_test)
 
+
+X_train_pad = pad_sequences(X_train_seq, maxlen=100, padding='post')
+X_test_pad = pad_sequences(X_test_seq, maxlen=100, padding='post')
+
+
+model = tf.keras.Sequential([
+    tf.keras.layers.Embedding(input_dim=10000, output_dim=64, input_length=100), # kelimeleri vektörlere çevirir
+    # RNN => "Ben kahve içtim" => Ben,kahve,içtim -> Ali okula gitti. Sonra geldi.
+    tf.keras.layers.Bidirectional(tf.keras.layers.LSTM(64)), # LSTM (Long Short-Term Memory)=> GRU,SimpleRNN
+    # LSTM'den gelen karmaşık temsili biraz daha "yoğunlaştırmak" için.
+    # Tam Bağlantılı Katman
+    tf.keras.layers.Dense(32, activation='relu'),
+    # Ezberlemeyi önlemek (Overfitting) %50 oranında rastgele nöronları eğitimsiz bırakır.
+    tf.keras.layers.Dropout(0.5),
+    # 1 çıktı oldugu için Dense(1)
+    tf.keras.layers.Dense(1, activation="sigmoid") # sigmoid => 0-1 arasında olasılık üretir (0.94 -> %94 spam)
+])
+
+# spam-değil
+# türü, cins -> Memeli-Kedi
+
+
+
 # Padding ["0, 15, 16, 18", "15, 17, 19, 20"] (Derin öğrenme modelleri her girdiyi sabit uzunlukta bekler.)
 # pre-post => 0'ı öne mi arkaya mı ekleyelim?
 #
 # maxlen = Çok uzun cümleleri istenilen maksimum uzunluğa göre kesmek için.
-X_train_pad = pad_sequences(X_train_seq, maxlen=100, padding='post')
-X_test_pad = pad_sequences(X_test_seq, maxlen=100, padding='post')
 
-print(X_test_pad[0])
 #bilmediklerim->1
 #ben->3
 #kahve->2
