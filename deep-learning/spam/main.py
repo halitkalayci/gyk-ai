@@ -45,10 +45,16 @@ model = tf.keras.Sequential([
     tf.keras.layers.Dense(1, activation="sigmoid") # sigmoid => 0-1 arasında olasılık üretir (0.94 -> %94 spam)
 ])
 
-# spam-değil
-# türü, cins -> Memeli-Kedi
+model.compile(loss='binary_crossentropy', optimizer='adam', metrics=['accuracy'])
 
+history = model.fit(X_train_pad, y_train, epochs=5, validation_data=(X_test_pad,y_test), batch_size=32)
 
+loss,acc = model.evaluate(X_test_pad, y_test)
+print(f"Test Doğruluk Oranı: {acc}")
+
+model.save("spam_model.keras")
+# predict.py isimli bir dosya oluşturup bu save edilen modeli kullanıldığı bir örnek
+# modelin her çalıştırmada yeni bir checkpoint (dosya) oluşturan orada kayıt yapacak şekilde düzenleyelim.. 
 
 # Padding ["0, 15, 16, 18", "15, 17, 19, 20"] (Derin öğrenme modelleri her girdiyi sabit uzunlukta bekler.)
 # pre-post => 0'ı öne mi arkaya mı ekleyelim?
