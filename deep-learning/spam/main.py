@@ -2,6 +2,7 @@ import pandas as pd
 from sklearn.preprocessing import LabelEncoder
 from sklearn.model_selection import train_test_split
 from tensorflow.keras.preprocessing.text import Tokenizer
+from tensorflow.keras.preprocessing.sequence import pad_sequences
 
 #df = pd.read_csv("spam.csv", encoding_errors='ignore')
 df = pd.read_csv("spam.csv", encoding='latin1')
@@ -17,6 +18,27 @@ texts = df['text'].values
 labels = df['label'].values
 
 X_train, X_test, y_train, y_test = train_test_split(texts,labels,test_size=0.2, random_state=42)
+
+tokenizer = Tokenizer(num_words=10000, oov_token='<OOV>')
+tokenizer.fit_on_texts(X_train) # sözlüğü oluşturma.
+
+
+X_train_seq = tokenizer.texts_to_sequences(X_train)
+X_test_seq  = tokenizer.texts_to_sequences(X_test)
+
+# Padding ["0, 15, 16, 18", "15, 17, 19, 20"] (Derin öğrenme modelleri her girdiyi sabit uzunlukta bekler.)
+# pre-post => 0'ı öne mi arkaya mı ekleyelim?
+#
+# maxlen = Çok uzun cümleleri istenilen maksimum uzunluğa göre kesmek için.
+X_train_pad = pad_sequences(X_train_seq, maxlen=100, padding='post')
+X_test_pad = pad_sequences(X_test_seq, maxlen=100, padding='post')
+
+print(X_test_pad[0])
+#bilmediklerim->1
+#ben->3
+#kahve->2
+
+# 3-2-1
 
 # Tokenizer -> verilen bir metni daha küçük parçalara (token) ayıran bir yapıdır.
 
@@ -39,14 +61,3 @@ X_train, X_test, y_train, y_test = train_test_split(texts,labels,test_size=0.2, 
 
 # num_words => maximum tutalacak kelime sayısı
 # oov_token => Bilinmeyen kelimeler için özel token <OOV>
-
-sentences = ["Ben kahve içtim.","Kahve çok güzeldi."]
-tokenizer = Tokenizer(num_words=10000, oov_token='<OOV>')
-
-tokenizer.fit_on_texts(sentences)
-print(tokenizer.word_index)
-# {'<OOV>': 1, 'kahve': 2, 'ben': 3, 'içtim': 4, 'çok': 5, 'güzeldi': 6}
-
-test_sentences = ["Ben kahve içmedim."]
-sequences = tokenizer.texts_to_sequences(test_sentences)
-print(sequences)
