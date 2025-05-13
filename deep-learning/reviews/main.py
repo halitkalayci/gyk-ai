@@ -43,18 +43,22 @@ model = tf.keras.Sequential([
     tf.keras.layers.Embedding(input_dim=10000, output_dim=64, input_length=50), # kelimeleri vektörlere çevirir
     tf.keras.layers.Bidirectional(tf.keras.layers.LSTM(64)),
     tf.keras.layers.Dense(32, activation='relu'), # f(x) = max(0,x)
-    tf.keras.layers.Dropout(0.3),
+    tf.keras.layers.Dropout(0.4),
     tf.keras.layers.Dense(1, activation='linear'), # hiçbir aktivasyon uygulanmasın demek. f(x)=x
 ])
 # Huber Loss => MSE+MAE karışımı gibi.
 model.compile(loss='mean_squared_error', optimizer='adam', metrics=['mae'])
 
-history = model.fit(X_train_pad, y_train, epochs=10, validation_data=(X_test_pad,y_test), batch_size=2)
+history = model.fit(X_train_pad, y_train, epochs=1, validation_data=(X_test_pad,y_test), batch_size=2)
 
 loss,mae = model.evaluate(X_test_pad, y_test) # evaluate => verdiğimiz loss function sonucunu ve metric(ler) sonucunu verir.
-print(f"MAE Skoru: {mae}")
+print(f"MAE Skoru: {mae}, Loss : {loss}")
 
 # val_loss Artıyorsa ⏫ train_loss azalıyorsa ⏬ -> Overfitting
 # val_loss ~ train_loss (birbirine yakın) ama ikisi de yüksek ise -> Underfitting 
 # val_loss Azalıyorsa ⏬ train_loss artıyorsa ⏫ -> Regularization fazla olduğu durum.
 # EarlyStopping-Grafik İzleme ?
+
+
+# Bu modelin overfitting yapmasını önlemek için gereken işlemleri uygulayınız.
+
