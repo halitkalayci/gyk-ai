@@ -7,7 +7,7 @@ import torch.optim as optim # Optimizasyon algoritmaları.
 env = gym.make('CartPole-v1', render_mode="human")
 
 # Hiperparametreler
-EPISODES = 50
+EPISODES = 500
 GAMMA = 0.99
 LEARNING_RATE = 0.001
 BATCH_SIZE = 64
@@ -71,6 +71,36 @@ def select_action(state, epsilon):
         with torch.no_grad():
             return policy_net(state).argmax().item()
         
+
+def replay():
+    # Yeterince örnek yoksa (hafızada)
+    if len(memory) < BATCH_SIZE:
+        return
+    batch = random.sample(memory, BATCH_SIZE)
+    states, actions, rewards, next_states, dones = zip(*batch)
+    # {state:,action:,reward:,next_state:,done:}
+    # {state:,action:,reward:,next_state:,done:}
+    # {state:,action:,reward:,next_state:,done:}
+    states = torch.FloatTensor(states).to(device)
+    actions = torch.LongTensor(actions).unsqueeze(1).to(device) # (2,) => (2,64) # .gather() için (batchSize)
+    rewards = torch.FloatTensor(rewards).unsqueeze(1).to(device) # QNetworkdeki hedefle örtüşmeli
+    next_states = torch.FloatTensor(next_states).to(device)
+    dones = torch.FloatTensor(dones).unsqueeze(1).to(device) # 1-dones uyumu için.
+
+    # Seçilen aksiyonlara göre Q değerini hesapla.
+    q_values = policy_net(states).gather(1, actions)
+
+    next_q_values = target_net(next_states).max(1)[0].unsqueeze(1).detach()
+    
+    target_q_values = rewards + (GAMMA * next_q_values * (1-dones))
+
+    # Loss detection ?
+    loss = nn.MSELoss()(q_values, target_q_values)
+    optimizer.zero_grad()
+    loss.backward()
+    optimizer.step()
+
+
 # Her bir bölüm için oyunu yeniden başlat, bitene kadar select_action fonk. ile rastgele ya da öğrenilmiş hareket yap.
 epsilon = EPS_START
 
@@ -92,6 +122,8 @@ for episode in range(EPISODES):
 
         state = next_state
         total_reward += reward
+
+        replay()
     
     epsilon = max(EPS_END, epsilon * EPS_DECAY)
     # Epsilon = Rastgelelik oranı
@@ -101,3 +133,5 @@ for episode in range(EPISODES):
         target_net.load_state_dict(policy_net.state_dict())
     
     print(f"Episode {episode}: Total Reward: {total_reward} Epsilon: {epsilon}")
+
+env.close()
