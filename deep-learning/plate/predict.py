@@ -1,65 +1,53 @@
 from ultralytics import YOLO
 import cv2
-import matplotlib.pyplot as plt
 import pytesseract
+import matplotlib.pyplot as plt
+import re
 
-# opsiyonel bir satır.
-pytesseract.pytesseract.tesseract_cmd = r"C:\Program Files\Tesseract-OCR\tesseract.exe"
-
-# macos
-# /usr/local/bin/tesseract - /opt/homebrew/bin/tesseract
+# (Opsiyonel) Windows için tesseract yolunu belirt
+# pytesseract.pytesseract.tesseract_cmd = r"C:\Program Files\Tesseract-OCR\tesseract.exe"
 
 # Modeli yükle
 model = YOLO("best.pt")
 
-img = cv2.imread("dataset/images/758.jpg")
-# source => tahmin yapılacak kaynak (img yolu veya arrayi)
-# conf (confident) => güven skoru (0.5 %50'den düşük güven duyduğun tahminleri görmezden gel.)
-# verbose => Tahmin detaylarını konsola yazsın mı?
+# Görseli yükle
+img = cv2.imread("dataset/images/1.jpg")
+
+# YOLO tahmini
 results = model.predict(source=img, conf=0.5, verbose=False)
 
-
-# 1den fazla tahmin göster? for döngüsü 
-boxes = results[0].boxes # Tahminler listesi
-
+boxes = results[0].boxes
 annot_img = img.copy()
 
 for box in boxes:
-    # Her tahminin x1,x2 y1,y2 alanları var
     x1, y1, x2, y2 = map(int, box.xyxy[0])
     conf = float(box.conf[0])
-
     h, w, _ = img.shape
 
-    pad = 30 #her kenarı 10 piksel geniş keselim.
+    pad = 30  # Kenarlardan geniş kırp
+    x1p = max(x1 - pad, 0)
+    y1p = max(y1 - pad, 0)
+    x2p = min(x2 + pad, w)
+    y2p = min(y2 + pad, h)
 
-    x1p = max(x1-pad, 0)
-    y1p = max(y1-pad, 0)
-    x2p = min(x2+pad, w)
-    y2p = min(y2+pad, h)
+    cropped = img[y1p:y2p, x1p:x2p]
 
-    cropped_plate = img[y1p:y2p, x1p:x2p]
+    # --- Preprocessing ---
+    gray = cv2.cvtColor(cropped, cv2.COLOR_BGR2GRAY)
+    inverted = cv2.bitwise_not(gray)
+    scaled = cv2.resize(inverted, None, fx=2.0, fy=2.0, interpolation=cv2.INTER_CUBIC)
+    _, thresh = cv2.threshold(scaled, 0, 255, cv2.THRESH_BINARY + cv2.THRESH_OTSU)
 
-    gray_plate = cv2.cvtColor(cropped_plate, cv2.COLOR_BGR2GRAY)
+    # --- OCR ---
+    config = "--psm 7 -c tessedit_char_whitelist=ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789"
+    text = pytesseract.image_to_string(thresh, config=config)
+    cleaned = re.sub(r"[^A-Z0-9]", "", text.upper())
 
-    # Threshold uygula
-    _, threshold = cv2.threshold(gray_plate, 0, 255, cv2.THRESH_BINARY + cv2.THRESH_OTSU)
+    print(f"OCR: {cleaned}")
 
-    #ocr ile resmi texte döndür.
-    # config="--psm 7" -> Tek satırlık bir okuma yapıyosun.
-    plate_text = pytesseract.image_to_string(cropped_plate)
-
-    print(f"OCR:{plate_text}")
-
-    #Post-processing -> 34 JH 023] -> ] KALDIRMAK
-
-    plt.figure(figsize=(10,7))
-    plt.imshow(cropped_plate)
+    # --- Görselleştir ---
+    plt.figure(figsize=(12, 6))
+    plt.imshow(thresh, cmap='gray')
+    plt.title(f"OCR: {cleaned}")
+    plt.axis("off")
     plt.show()
-    
-
-
-
-
-# OCR => Optical Character Recognition
-# 
